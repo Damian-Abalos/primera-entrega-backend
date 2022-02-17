@@ -1,6 +1,9 @@
 import express from "express";
+const { Router } = express;
 import cors from "cors";
 const app = express();
+const productos = Router()
+const carrito = Router()
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -8,14 +11,7 @@ app.use(cors());
 
 let ahora = Date.now();
 
-const data = [
-    { nombre: "Damian", edad: 27 },
-    { nombre: "Juana", edad: 26 },
-    { nombre: "Leo", edad: 28 },
-    { nombre: "Jony", edad: 31 },
-];
-
-const productos = [
+const misProductos = [
     {
         id: 1,
         timestamp: ahora,
@@ -42,45 +38,58 @@ const admin = true;
 
 //productos
 
-app.get("/productos", (req, res) => {
-    res.send(productos);
+productos.get("/", (req, res) => {
+    res.send(misProductos);
 });
 
-app.post("/productos", (req, res) => {
+productos.post("/", (req, res) => {
     const newData = req.body;
-    productos.push(newData);
+    misProductos.push(newData);
     res.send(data);
 });
 
-// app.put('/productos', (req, res) => {
+productos.put('/:id', (req, res) => {
+    //recibe y actualiza un producto según su id.
+    let id = req.params.id - 1
+    misProductos[id]["nombre"] = req.body.title
+    misProductos[id]["precio"] = req.body.price
+    misProductos[id]["foto"] = req.body.thumbnail
 
-// })
+    res.send(misProductos)
 
-// app.delete('/productos', (req, res) => {
+});
 
-// })
+productos.delete('/:id', (req, res) => {
+    //elimina un producto según su id.
+    let id = req.params.id - 1
+    misProductos.splice(id, 1)
+    res.send(misProductos)
+});
 
 // //carrito
 
-// app.post('/carrito', (req, res) => {
+// carrito.post('/', (req, res) => {
 
 // })
 
-// app.delete('/carrito/:id', (req, res) => {
+// carrito.delete('/:id', (req, res) => {
 
 // })
 
-// app.get('/carrito/:id/productos', (req, res) => {
+// carrito.get('/:id/productos', (req, res) => {
 
 // })
 
-// app.post('/carrito/:id/productos', (req, res) => {
+// carrito.post('/:id/productos', (req, res) => {
 
 // })
 
-// app.delete('/carrito/:id/productos/:id_prod', (req, res) => {
+// carrito.delete('/:id/productos/:id_prod', (req, res) => {
 
 // })
+app.use('/api/carrito', carrito)
+app.use('/api/productos', productos)
+app.use('/static', express.static('public'));
 
 app.listen(8000, () => {
     console.log("server on");
