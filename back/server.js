@@ -1,96 +1,113 @@
+import cors from "cors";
 import express from "express";
 const { Router } = express;
-import cors from "cors";
 const app = express();
-const productos = Router()
-const carrito = Router()
+
+const rutaProductos = Router();
+const rutaCarritos = Router();
+import Productos from "./Productos.js";
+import Carritos from "./Carritos.js";
+const productos = new Productos("productos.txt");
+const carritos = new Carritos("carritos.txt");
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 
-let ahora = Date.now();
-
-const misProductos = [
-    {
-        id: 1,
-        timestamp: ahora,
-        nombre: "Palta",
-        descripcion: "Palta hass",
-        codigo: 1234,
-        foto: "https://hiperlibertad.vteximg.com.br/arquivos/ids/168488-1000-1000/PALTA-HASS-X-UN-1-10016.jpg?v=637353115999530000",
-        precio: 125,
-        stock: 50,
-    },
-    {
-        id: 2,
-        timestamp: ahora,
-        nombre: "Tomate",
-        descripcion: "Tomate perita",
-        codigo: 1235,
-        foto: "https://ardiaprod.vteximg.com.br/arquivos/ids/213840-1000-1000/Tomate-Perita-x-Kg-_1.jpg?v=637711189359870000",
-        precio: 125,
-        stock: 50,
-    },
-];
-
-const admin = true;
+const administrador = true;
 
 //productos
-
-productos.get("/", (req, res) => {
-    res.send(misProductos);
+rutaProductos.get("/", (req, res) => {
+    productos.getAll().then((resp) => res.send(resp));
 });
 
-productos.post("/", (req, res) => {
+rutaProductos.get("/:id", (req, res) => {
+    const id = req.params.id;
+    console.log(id);
+    productos.getById(id).then((resp) => res.send(resp));
+});
+
+rutaProductos.post("/", (req, res) => {
     const newData = req.body;
-    misProductos.push(newData);
-    res.send(data);
+    if (administrador) {
+        productos.save(newData).then((resp) => res.send(resp));
+    } else {
+        res.send({
+            error: -1,
+            descripcion: `ruta '${req.url}' método ${req.method}, no autorizada`,
+        });
+    }
 });
 
-productos.put('/:id', (req, res) => {
-    //recibe y actualiza un producto según su id.
-    let id = req.params.id - 1
-    misProductos[id]["nombre"] = req.body.title
-    misProductos[id]["precio"] = req.body.price
-    misProductos[id]["foto"] = req.body.thumbnail
-
-    res.send(misProductos)
-
+rutaProductos.put("/:id", (req, res) => {
+    let id = req.params.id;
+    if (administrador) {
+        productos.updateById(req.body, id).then((resp) => res.send(resp));
+    } else {
+        res.send({
+            error: -1,
+            descripcion: `ruta '${req.url}' método ${req.method}, no autorizada`,
+        });
+    }
 });
 
-productos.delete('/:id', (req, res) => {
-    //elimina un producto según su id.
-    let id = req.params.id - 1
-    misProductos.splice(id, 1)
-    res.send(misProductos)
+rutaProductos.delete("/:id", (req, res) => {
+    let id = req.params.id;
+    if (administrador) {
+        productos.deleteById(id).then((resp) => res.send(resp));
+    } else {
+        res.send({
+            error: -1,
+            descripcion: `ruta '${req.url}' método ${req.method}, no autorizada`,
+        });
+    }
 });
 
-// //carrito
+//carrito
 
-// carrito.post('/', (req, res) => {
+rutaCarritos.get("/", (req, res) => {
+    carritos.getAllCarts().then((resp) => res.send(resp));
+});
 
-// })
+rutaCarritos.get("/:id", (req, res) =>{
+    const id = req.params.id;
+    console.log(id);
+    carritos.getById(id).then((resp) => res.send(resp));
+})
 
-// carrito.delete('/:id', (req, res) => {
+rutaCarritos.post('/', (req, res) => {
+    carritos.create().then(resp => res.send(resp))
+})
 
-// })
+rutaCarritos.delete('/:id', (req, res) => {
+    const id = req.params.id
+    carritos.deleteCartByID(id).then(resp => res.send(resp))
+})
 
-// carrito.get('/:id/productos', (req, res) => {
+rutaCarritos.post('/:id/productos', (req, res) => {
+    const id = req.params.id
+    const id_prod = req.body.id_prod
+    productos.getById(id_prod)
+        .then(resp => {
+            carritos.saveById(resp, id).then(respo => res.send(respo))
+        })
+})
 
-// })
+rutaCarritos.get('/:id/productos', (req, res) => {
+    const id = req.params.id
+    carritos.getProductsById(id).then(resp => res.send(resp))
+})
 
-// carrito.post('/:id/productos', (req, res) => {
+rutaCarritos.delete('/:id/productos/:id_prod', (req, res) => {
+    const id = req.params.id
+    const id_prod = req.params.id_prod
+    carritos.updateById(id, id_prod).then(resp => res.send(resp))
+})
 
-// })
+app.use('/api/carritos', rutaCarritos)
+app.use("/api/productos", rutaProductos);
+app.use("/static", express.static("public"));
 
-// carrito.delete('/:id/productos/:id_prod', (req, res) => {
-
-// })
-app.use('/api/carrito', carrito)
-app.use('/api/productos', productos)
-app.use('/static', express.static('public'));
-
-app.listen(8000, () => {
+app.listen(8080, () => {
     console.log("server on");
 });

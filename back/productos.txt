@@ -1,0 +1,1 @@
+[{"nombre":"damian","descripcion":"asd","codigo":"asd","foto":"asd","precio":"asd","stock":"asd","timestamp":"Sun Feb 27 2022 18:32:24 GMT-0300 (hora estándar de Argentina)","id":1},{"nombre":[],"descripcion":[],"codigo":[],"foto":[],"precio":[],"stock":[],"timestamp":"Sun Feb 27 2022 18:32:28 GMT-0300 (hora estándar de Argentina)","id":2}]
